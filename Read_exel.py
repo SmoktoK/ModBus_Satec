@@ -3,12 +3,11 @@ import numpy as np
 from pyModbusTCP.client import ModbusClient
 
 read_params = pd.read_excel('satec.xlsx')
-l = read_params.iloc[1, 2]
 print('Количество строк:', read_params.shape[0])
 
-
-
 SATEC_PORTS = {'720'}
+
+
 class MainCounter:
     def __init__(self, port, unit, ip, desc):
         self.c = ModbusClient()
@@ -34,7 +33,7 @@ class MainCounter:
 
     def uab_reg(self, reg, reg_coun, default):
 
-        uab_reg = self.c.read_holding_registers(13888, 2)
+        uab_reg = self.c.read_holding_registers(reg, reg_coun)
         if uab_reg:
             uab = (np.uint16(uab_reg[1]) << 16) + np.uint16(uab_reg[0])
             print(default, uab)
@@ -75,6 +74,7 @@ class Satec(MainCounter):
             'angle_lb': self.uab_reg(13914, 2, 'angle_lb'),
             'angle_lc': self.uab_reg(13916, 2, 'angle_lc'),
         }
+
 
 class Alpha(Satec):
 
