@@ -1,165 +1,119 @@
+from time import sleep
 import numpy as np
 from datetime import datetime as dt
 from pyModbusTCP.client import ModbusClient
 import pandas as pd
+import os
+from openpyxl import load_workbook
+from Read_exel import Satec
 
-file_line = 1
-file_col = 2
+
+def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None, truncate_sheet=False, **to_excel_kwargs):
+    """
+    Append a DataFrame [df] to existing Excel file [filename]
+    into [sheet_name] Sheet.
+    If [filename] doesn't exist, then this function will create it.
+
+    @param filename: File path or existing ExcelWriter
+                     (Example: '/path/to/file.xlsx')
+    @param df: DataFrame to save to workbook
+    @param sheet_name: Name of sheet which will contain DataFrame.
+                       (default: 'Sheet1')
+    @param startrow: upper left cell row to dump data frame.
+                     Per default (startrow=None) calculate the last row
+                     in the existing DF and write to the next row...
+    @param truncate_sheet: truncate (remove and recreate) [sheet_name]
+                           before writing DataFrame to Excel file
+    @param to_excel_kwargs: arguments which will be passed to `DataFrame.to_excel()`
+                            [can be a dictionary]
+    @return: None
+
+    Usage examples:
+
+    # >>> append_df_to_excel('d:/temp/test.xlsx', df)
+    #
+    # >>> append_df_to_excel('d:/temp/test.xlsx', df, header=None, index=False)
+    #
+    # >>> append_df_to_excel('d:/temp/test.xlsx', df, sheet_name='Sheet2',
+    #                        index=False)
+    #
+    # >>> append_df_to_excel('d:/temp/test.xlsx', df, sheet_name='Sheet2',
+    #                        index=False, startrow=25)
+
+    (c) [MaxU](https://stackoverflow.com/users/5741205/maxu?tab=profile)
+    """
+    # Excel file doesn't exist - saving and exiting
+    if not os.path.isfile(filename):
+        df.to_excel(
+            filename,
+            sheet_name=sheet_name,
+            startrow=startrow if startrow is not None else 0,
+            **to_excel_kwargs)
+        return
+
+    # ignore [engine] parameter if it was passed
+    if 'engine' in to_excel_kwargs:
+        to_excel_kwargs.pop('engine')
+
+    writer = pd.ExcelWriter(filename, engine='openpyxl', mode='a')
+
+    # try to open an existing workbook
+    writer.book = load_workbook(filename)
+
+    # get the last row in the existing Excel sheet
+    # if it was not specified explicitly
+    if startrow is None and sheet_name in writer.book.sheetnames:
+        startrow = writer.book[sheet_name].max_row
+
+    # truncate sheet
+    if truncate_sheet and sheet_name in writer.book.sheetnames:
+        # index of [sheet_name] sheet
+        idx = writer.book.sheetnames.index(sheet_name)
+        # remove [sheet_name]
+        writer.book.remove(writer.book.worksheets[idx])
+        # create an empty sheet [sheet_name] using old index
+        writer.book.create_sheet(sheet_name, idx)
+
+    # copy existing sheets
+    writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
+
+    if startrow is None:
+        startrow = 0
+
+    # write out the new sheet
+    df.to_excel(writer, sheet_name, startrow=startrow, **to_excel_kwargs)
+
+    # save the workbook
+    writer.save()
+
+
+i = 0
+file_line = 0  # Строка списка
+file_col = 2  # Столбец списка
 # Читаем файл с параметрами
 read_params = pd.read_excel('satec.xlsx')
-print('Количество строк:', read_params.shape[0])
+print('Количество строк:', read_params.shape[0])  # Считаем количество строк в файле
+# print(type(read_params.shape[0]))
+tot_line = read_params.shape[0]
 
-# Читаем данные из ячеек для соединения
-ip = read_params.iloc[file_line, file_col]  # 1- первая строка от шапки 2 столбца
-port = read_params.iloc[1, 3]
-unit = read_params.iloc[1, 4]
-c = ModbusClient()
-c.host(ip)
-c.port(port)
-c.unit_id(unit)
-c.open()
-print(ip)
+while i < tot_line:
+    # Читаем данные из ячеек для соединения
+    ip = read_params.iloc[file_line, 2]  # 1- первая строка от шапки 2 столбца
+    port = read_params.iloc[file_line, 3]
+    unit = read_params.iloc[file_line, 4]
+    desc = read_params.iloc[file_line, 0]  # Название счетчика
+    satec = Satec(port, unit, ip, desc)
+    out_file = os.getcwd() + '/satec_out.xlsx'
+    # alpha = Alpha(port, unit, ip)
+    print(desc)
+    print(ip)
+    i += 1
+    file_line += 1
+    # Тип счетчика
 
-# Тип счетчика
+    # Прошивка модуля связи (ПРОВЕРИТЬ!!!!!)
 
-device_type_reg = c.read_holding_registers(46082, 2)
-if device_type_reg:
-    device_type = str((np.uint16(device_type_reg[1]) << 16) + np.uint16(device_type_reg[0]))
-    print('Type: ', device_type[:3])
-else:
-    print("read error")
-
-# Серийный номер
-
-device_sn_reg = c.read_holding_registers(46080, 2)
-if device_sn_reg:
-    device_sn = str((np.uint16(device_sn_reg[1]) << 16) + np.uint16(device_sn_reg[0]))
-    print('S/N ', device_sn)
-else:
-    print("read error")
-
-# Прошивка
-
-device_fw_reg = c.read_holding_registers(46100, 4)
-if device_fw_reg:
-    device_fw = str(np.uint16(device_fw_reg[0])) + str(np.uint16(device_fw_reg[1]))
-    print('firmware ', device_fw)
-else:
-    print("read error")
-
-# Прошивка модуля связи (ПРОВЕРИТЬ!!!!!)
-
-# deviceEht_fw_reg = c.read_holding_registers(46100, 4)
-# if deviceEht_fw_reg:
-#     deviceEth_fw = str(np.uint16(deviceEht_fw_reg[2])) + str(np.uint16(deviceEht_fw_reg[3]))
-#     print('firmware Eth ', deviceEth_fw)
-# else:
-#     print("read error")
-
-# Время на приборе (ПРОВЕРИТЬ!!!!!)
-
-# time_reg = c.read_holding_registers(46416, 12)
-# print(time_reg)
-# ts = (np.uint16(time_reg[3]) << 16) + np.uint16(time_reg[2])
-# print("Time - %s" % (dt.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')))
+    df = pd.DataFrame(satec.out_to_excel, index=[1])
+    append_df_to_excel(out_file, df, header=None)
 
 
-# Uab 720
-
-uab_reg_720 = c.read_holding_registers(13888, 2)
-if uab_reg_720:
-    uab = (np.uint16(uab_reg_720[1]) << 16) + np.uint16(uab_reg_720[0])
-    print('Uab ', uab)
-else:
-    print("read error")
-
-# Ubc 720
-
-ubc_reg_720 = c.read_holding_registers(13890, 2)
-if ubc_reg_720:
-    ubc = (np.uint16(ubc_reg_720[1]) << 16) + np.uint16(ubc_reg_720[0])
-    print('Ubc ', ubc)
-else:
-    print("read error")
-
-# Uca 720
-
-uca_reg_720 = c.read_holding_registers(13892, 2)
-if uca_reg_720:
-    uca = (np.uint16(uca_reg_720[1]) << 16) + np.uint16(uca_reg_720[0])
-    print('Uca ', uca)
-else:
-    print("read error")
-
-
-# Angle_Uab 720
-
-angle_uab_reg_720 = c.read_holding_registers(13904, 2)
-if angle_uab_reg_720:
-    angle_uab = (np.int16(angle_uab_reg_720[1]) << 16) + np.uint16(angle_uab_reg_720[0])
-    print('Angle_Uab ', angle_uab)
-else:
-    print("read error")
-
-# Angle_Ubc 720
-
-angle_ubc_reg_720 = c.read_holding_registers(13906, 2)
-if angle_uab_reg_720:
-    angle_ubc = (np.int16(angle_ubc_reg_720[1]) << 16) + np.uint16(angle_ubc_reg_720[0])
-    print('Angle_Ubc ', angle_ubc)
-else:
-    print("read error")
-
-# Angle_Uca 720
-
-angle_uca_reg_720 = c.read_holding_registers(13908, 2)
-if angle_uab_reg_720:
-    angle_uca = (np.int16(angle_uca_reg_720[1]) << 16) + np.uint16(angle_uca_reg_720[0])
-    print('Angle_Uca ', angle_uca)
-else:
-    print("read error")
-
-
-# La 720
-
-la_reg_720 = c.read_holding_registers(13896, 2)
-if la_reg_720:
-    la = (np.uint16(la_reg_720[1]) << 16) + np.uint16(la_reg_720[0])
-    print('La ', la)
-else:
-    print("read error")
-
-# Lb 720
-
-lb_reg_720 = c.read_holding_registers(13898, 2)
-if lb_reg_720:
-    lb = (np.uint16(lb_reg_720[1]) << 16) + np.uint16(lb_reg_720[0])
-    print('Lb ', lb)
-else:
-    print("read error")
-
-# Lc 720
-
-lc_reg_720 = c.read_holding_registers(13900, 2)
-if lc_reg_720:
-    lc = (np.uint16(lc_reg_720[1]) << 16) + np.uint16(lc_reg_720[0])
-    print('Lc ', lc)
-else:
-    print("read error")
-print(uab_reg_720)
-# regs = c.read_holding_registers(36100, 4)
-# if regs:
-#     print("elements num %d" % (len(regs)))
-#     print("element's type %s" % (type(regs[0])))
-#     print(regs)
-#
-#     kvar = (np.int16(regs[1]) << 16) + np.uint16(regs[0])
-#     ts = (np.uint16(regs[3]) << 16) + np.uint16(regs[2])
-#
-#     print("example INT32 - kvar - %d" % (kvar))
-#     print("example UINT32 - timestamp - %s" % (dt.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')))
-#
-# else:
-#     print("read error")
-
-c.close()
