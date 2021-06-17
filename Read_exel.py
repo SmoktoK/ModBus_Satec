@@ -14,7 +14,7 @@ class Satec:
         self.c.port(port)
         self.c.unit_id(unit)
         self.c.open()
-        self.device_type = self.uint32_reg(46082, 'type') # Тип счетчика
+        self.device_type = self.uint32_reg(46082, 'type')  # Тип счетчика
         print(f'{self.device_type=}')
         self.device_sn = self.uint32_reg(46080, 'sn')  # Серийный номер
         self.device_fw = self.uint16_reg(46100, 'fw', reg_count=4)
@@ -132,13 +132,14 @@ class Satec:
 
         return uab
 
-    def uint16_time(self, reg, default, reg_count=12):
+    def uint16_time(self, reg, default, reg_count=2):
 
         time_reg = self.c.read_holding_registers(reg, reg_count)
         if time_reg:
-            ts = (np.uint16(time_reg[3]) << 16) + np.uint16(time_reg[2])
+            ts = (np.uint16(time_reg[1]) << 16) + np.uint16(time_reg[0])
             ts_out = dt.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-            # print(np.uint16(time_reg[1]), np.uint16(time_reg[0]))
+            # print(np.uint16(time_reg[10]), np.uint16(time_reg[9]), np.uint16(time_reg[8]), np.uint16(time_reg[7]),
+            #       np.uint16(time_reg[6]), np.uint16(time_reg[5]))
             print(default, ts_out)
         else:
             return f'{default} error'
