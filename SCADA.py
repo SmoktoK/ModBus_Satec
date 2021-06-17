@@ -5,7 +5,7 @@ from pyModbusTCP.client import ModbusClient
 import pandas as pd
 import os
 from openpyxl import load_workbook
-from Read_exel import Satec720, Satec133
+from Read_exel import Satec
 
 
 def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None, truncate_sheet=False, **to_excel_kwargs):
@@ -98,7 +98,7 @@ tot_line = read_params.shape[0]
 
 df = pd.DataFrame({'Desc': [1], 'Name': [1], 'ip': [1], 'FW': [1], 'port': [1], 'id': [1], 'uab': [1], 'ubc': [1],
                    'uca': [1], 'angle_uab': [1], 'angle_ubc': [1], 'angle_uca': [1], 'la': [1], 'lb': [1], 'lc': [1],
-                   'Angle_la': [1], 'Angle_lb': [1], 'Angle_lc': [1]})
+                   'Angle_la': [1], 'Angle_lb': [1], 'Angle_lc': [1], 'Time': [1]})
 df.to_excel('./satec_out.xlsx')
 
 
@@ -108,15 +108,15 @@ while i < tot_line:
     port = read_params.iloc[file_line, 3]
     unit = read_params.iloc[file_line, 4]
     desc = read_params.iloc[file_line, 0]  # Название счетчика
-    satec720 = Satec720(port, unit, ip, desc)
-    # satec133 = Satec133(port, unit, ip, desc)
-    out_file = os.getcwd() + '/satec_out.xlsx'
-    # alpha = Alpha(port, unit, ip)
+    satec = Satec(port, unit, ip, desc)
     print('Desc ', desc)
     print(ip)
+    out_file = os.getcwd() + '/satec_out.xlsx'
+    # alpha = Alpha(port, unit, ip)
+
     i += 1
     file_line += 1
     # Тип счетчика
 
-    df = pd.DataFrame(satec720.out_to_excel, index=[1])
+    df = pd.DataFrame(satec.out_to_excel, index=[1])
     append_df_to_excel(out_file, df, header=None)
