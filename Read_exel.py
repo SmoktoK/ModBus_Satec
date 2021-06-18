@@ -138,8 +138,6 @@ class Satec:
         if time_reg:
             ts = (np.uint16(time_reg[1]) << 16) + np.uint16(time_reg[0])
             ts_out = dt.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-            # print(np.uint16(time_reg[10]), np.uint16(time_reg[9]), np.uint16(time_reg[8]), np.uint16(time_reg[7]),
-            #       np.uint16(time_reg[6]), np.uint16(time_reg[5]))
             print(default, ts_out)
         else:
             return f'{default} error'
