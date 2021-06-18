@@ -1,7 +1,3 @@
-from time import sleep
-import numpy as np
-from datetime import datetime as dt
-from pyModbusTCP.client import ModbusClient
 import pandas as pd
 import os
 from openpyxl import load_workbook
@@ -101,7 +97,6 @@ df = pd.DataFrame({'Desc': [1], 'Name': [1], 'ip': [1], 'FW': [1], 'port': [1], 
                    'Angle_la': [1], 'Angle_lb': [1], 'Angle_lc': [1], 'Time': [1]})
 df.to_excel('./satec_out.xlsx')
 
-
 while i < tot_line:
     # Читаем данные из ячеек для соединения
     ip = read_params.iloc[file_line, 2]  # 1- первая строка от шапки 2 столбца
@@ -112,11 +107,8 @@ while i < tot_line:
     print('Desc ', desc)
     print(ip)
     out_file = os.getcwd() + '/satec_out.xlsx'
-    # alpha = Alpha(port, unit, ip)
-
     i += 1
     file_line += 1
-    # Тип счетчика
 
     df = pd.DataFrame(satec.out_to_excel, index=[1])
     append_df_to_excel(out_file, df, header=None)

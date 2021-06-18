@@ -34,6 +34,8 @@ class Satec:
             print('Type error')
         self.c.close()
 
+# Функции опроса для типа счетчиков
+
     def get_number720(self):
         return {
             'uab': self.uint32_reg(13888, 'uab'),
@@ -65,6 +67,7 @@ class Satec:
             'angle_la': self.int32_reg(13888, 'angle_la'),
             'angle_lb': self.int32_reg(13890, 'angle_lb'),
             'angle_lc': self.int32_reg(13892, 'angle_lc'),
+            'Time': self.uint16_time(4352, 'Time')
         }
 
     def get_number175(self):
@@ -81,6 +84,7 @@ class Satec:
             'angle_la': self.int32_reg(13912, 'angle_la'),
             'angle_lb': self.int32_reg(13914, 'angle_lb'),
             'angle_lc': self.int32_reg(13916, 'angle_lc'),
+            'Time': self.uint16_time(46416, 'Time')
         }
 
     def get_number180(self):
@@ -97,7 +101,10 @@ class Satec:
             'angle_la': self.int32_reg(13912, 'angle_la'),
             'angle_lb': self.int32_reg(13914, 'angle_lb'),
             'angle_lc': self.int32_reg(13916, 'angle_lc'),
+            'Time': self.uint16_time(46416, 'Time')
         }
+
+# Функции расчета
 
     def uint32_reg(self, reg, default, reg_count=2):
 
