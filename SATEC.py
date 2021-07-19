@@ -61,7 +61,7 @@ def modbus(host, port, addr, reg, task_list):
             typelist = list(task_list.values())
             keyslist = list(task_list.keys())
             print("reg ad #0 to 9: " + str(regs))
-            final_list = [regs[key] for key in keyslist]
+            #final_list = [regs[key] for key in keyslist]
             # print(str(final_list))
             # print(str(keyslist))
             # print(str(typelist))
@@ -71,7 +71,7 @@ def modbus(host, port, addr, reg, task_list):
                 if type == "UINT16":
                     count = np.uint16(regs[keyslist[q]])
                     # print(count, q)
-                    key_final = regs[keyslist[q]]
+                    #key_final = regs[keyslist[q]]
                     final_small_output.append(f'{keyslist[q]}: {count}')
                     q += 1
                 elif type == "INT16":
