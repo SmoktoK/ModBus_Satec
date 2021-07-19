@@ -106,7 +106,7 @@ for device in full_list:
 
 for thread in threads:
     thread.join()
-
+print('Опрос закончен!')
 
 for answ in final_output:
     sheet_save.append(answ)
