@@ -33,10 +33,10 @@ for rows in range(1, sheet.max_row+1):
     temptemp = sheet[rows][5].value
     res = {int(sub.split(":")[0]): sub.split(":")[1] for sub in temptemp[1:-1].split(", ")}
     single_dict["task_list"] = res
-    # single_dict["task_list"] = sheet[rows][5].value
+    single_dict["task_list"] = sheet[rows][5].value
     full_list.append(single_dict.copy())
-    # print(temptemp)
-    # print(res)
+    #print(temptemp)
+    print(res)
 
 
 print(full_list)
@@ -48,6 +48,7 @@ def modbus(host, port, addr, reg, task_list):
     c.host(host)
     c.port(port)
     time.sleep(random.random())
+    print('connect to: ',  host)
     if not c.is_open():
         if not c.open():
             print("unable to connect to " + host + ":" + str(port) + str(addr))
@@ -61,7 +62,7 @@ def modbus(host, port, addr, reg, task_list):
             typelist = list(task_list.values())
             keyslist = list(task_list.keys())
             print("reg ad #0 to 9: " + str(regs))
-            #final_list = [regs[key] for key in keyslist]
+            final_list = [regs[key] for key in keyslist]
             # print(str(final_list))
             # print(str(keyslist))
             # print(str(typelist))
@@ -71,7 +72,7 @@ def modbus(host, port, addr, reg, task_list):
                 if type == "UINT16":
                     count = np.uint16(regs[keyslist[q]])
                     # print(count, q)
-                    #key_final = regs[keyslist[q]]
+                    key_final = regs[keyslist[q]]
                     final_small_output.append(f'{keyslist[q]}: {count}')
                     q += 1
                 elif type == "INT16":
