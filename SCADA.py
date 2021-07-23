@@ -87,7 +87,7 @@ i = 0
 file_line = 0  # Строка списка
 file_col = 2  # Столбец списка
 # Читаем файл с параметрами
-read_params = pd.read_excel('satec.xlsx')
+read_params = pd.read_excel('test.xlsx')
 # print('Количество строк:', read_params.shape[0])  # Считаем количество строк в файле
 # print(type(read_params.shape[0]))
 tot_line = read_params.shape[0]

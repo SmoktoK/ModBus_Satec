@@ -3,7 +3,7 @@ import numpy as np
 from pyModbusTCP.client import ModbusClient
 from datetime import datetime as dt
 
-read_params = pd.read_excel('satec.xlsx')  # Файл для считывания
+read_params = pd.read_excel('test.xlsx')  # Файл для считывания
 print('Количество строк:', read_params.shape[0])  # Считаем количество строк в файле
 
 
