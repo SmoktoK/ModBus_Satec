@@ -1,10 +1,11 @@
-import random
-import threading
-import time
-import numpy as np
-import openpyxl
+import threading, time
 from pyModbusTCP.client import ModbusClient
+import openpyxl
+import random
+import numpy as np
+import time
 
+t0 = time.clock
 book = openpyxl.open('test.xlsx', read_only=True)
 sheet = book.active
 book_save = openpyxl.Workbook()
@@ -33,11 +34,12 @@ for rows in range(1, sheet.max_row+1):
     temptemp = sheet[rows][5].value
     res = {int(sub.split(":")[0]): sub.split(":")[1] for sub in temptemp[1:-1].split(", ")}
     single_dict["task_list"] = res
-    single_dict["task_list"] = sheet[rows][5].value
+    # single_dict["task_list"] = sheet[rows][5].value
     full_list.append(single_dict.copy())
-    #print(temptemp)
-    print(res)
-
+    # print(temptemp)
+    # print(res)
+t1 = time.clock() -t0
+print('Список сгенерирован за: ', t1, 'секунд')
 
 print(full_list)
 
@@ -48,7 +50,6 @@ def modbus(host, port, addr, reg, task_list):
     c.host(host)
     c.port(port)
     time.sleep(random.random())
-    print('connect to: ',  host)
     if not c.is_open():
         if not c.open():
             print("unable to connect to " + host + ":" + str(port) + str(addr))
@@ -107,9 +108,11 @@ for device in full_list:
 
 for thread in threads:
     thread.join()
-print('Опрос закончен!')
+
 
 for answ in final_output:
     sheet_save.append(answ)
 
 book_save.save('result.xlsx')
+t2 = time.clock() - t0
+print('Время выполнения программы:', t2)
