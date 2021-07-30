@@ -6,18 +6,20 @@ import numpy as np
 from pyModbusTCP.client import ModbusClient
 import ast
 import json
+import openpyxl
 
+book_save = openpyxl.Workbook()
+sheet_save = book_save.active
 final_list = []
 final_output = []
+# sheet_save = []
+t_start = time.perf_counter()
 
-# t_start = time.perf_counter()
-
-excel_data_df = pd.read_excel('1.xlsx', usecols=['server_host', 'server_port', 'start_reg', 'reg_qnty',
+excel_data_df = pd.read_excel('satec.xlsx', usecols=['server_host', 'server_port', 'start_reg', 'reg_qnty',
                                                         'task_list'])
 my_dict = excel_data_df.to_dict()
 
-# print(excel_data_df.head())
-# print(excel_data_df)
+
 len_dict = len(my_dict['server_host'])
 # print((temptemp)[0])
 
@@ -40,7 +42,7 @@ def modbus(host, port, addr, reg, task_list):
     c = ModbusClient()
     c.host(host)
     c.port(port)
-    time.sleep(random.random())
+    # time.sleep(random.randint(3, 10))
     if not c.is_open():
         if not c.open():
             print("unable to connect to " + host + ":" + str(port) + str(addr))
@@ -54,11 +56,10 @@ def modbus(host, port, addr, reg, task_list):
             print(regs)
             typelist = list(task_list.values())
             keyslist = list(task_list.keys())
+            keyslist = [int(x) for x in keyslist]
             # print("reg ad #0 to 9: " + str(regs))
-            final_list = [regs[key] for key in keyslist]
+            # final_list = [regs[key] for key in keyslist]
             # print(str(final_list))
-            # print(str(keyslist))
-            # print(str(typelist))
             q = 0
             final_small_output = [host, addr, reg]
             for type in typelist:
@@ -100,10 +101,6 @@ for device in range(len_dict):
     server_port = my_dict['server_port'][device]
     start_reg = my_dict['start_reg'][device]
     reg_gnty = my_dict['reg_qnty'][device]
-    # single_dict['task_list'] = dicktator
-    # print(temptemp)
-    # print(dicktator)
-    # print(type(dicktator))
     t = threading.Thread(target=modbus, args=[server_host, server_port, start_reg, reg_gnty, dicktator])
     t.start()
     threads.append(t)
@@ -115,6 +112,7 @@ for thread in threads:
 for answ in final_output:
     sheet_save.append(answ)
 
-book_save.save('123.xlsx')
-# all_time = time.perf_counter() - t_start
-# print(f'Время выполнения опроса: {all_time}')
+book_save.save('result_out.xlsx')
+all_time = time.perf_counter() - t_start
+print(f'Время выполнения опроса: {all_time}')
+print('End!')
