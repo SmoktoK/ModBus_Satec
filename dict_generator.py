@@ -13,7 +13,7 @@ final_output = []
 # sheet_save = []
 t_start = time.perf_counter()
 
-excel_data_df = pd.read_excel('satec_new.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
+excel_data_df = pd.read_excel('satec.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
                                                      'task_list'])
 my_dict = excel_data_df.to_dict()
 
