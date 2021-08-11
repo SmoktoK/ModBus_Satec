@@ -13,7 +13,7 @@ final_output = []
 # sheet_save = []
 t_start = time.perf_counter()
 
-excel_data_df = pd.read_excel('satec.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
+excel_data_df = pd.read_excel('satec1.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
                                                      'task_list'])
 my_dict = excel_data_df.to_dict()
 
@@ -46,7 +46,7 @@ def modbus(name, host, port, addr, reg, task_list):
     if not c.is_open():
         if not c.open():
             # print("unable to connect to " + host + ":" + str(port) + str(addr))
-            final_output.append([name, host, 'unable to connect'])
+            final_output.append([name, host, addr, 'unable to connect'])
     # if open() is ok, read register (modbus function 0x03)
     if c.is_open():
         # read 10 registers at address 0, store result in regs list
@@ -61,7 +61,7 @@ def modbus(name, host, port, addr, reg, task_list):
             # final_list = [regs[key] for key in keyslist]
             # print(str(final_list))
             q = 0
-            final_small_output = [name, host, addr, reg]
+            final_small_output = [name, host, addr]
             for type in typelist:
                 if type == "UINT16":
                     count = np.uint16(regs[keyslist[q]])
@@ -87,10 +87,10 @@ def modbus(name, host, port, addr, reg, task_list):
                 else:
                     print("error data TYPE")
                     # final_small_output.append([f'Error data TYPE {host}{keyslist[q]}: {keyslist[q]}'])
-                    final_output.append([name, host, 'Error data TYPE'])
+                    final_output.append([name, host, addr, 'Error data TYPE'])
             final_output.append(final_small_output)
         else:
-            final_output.append([name, host, 'unable to read register'])
+            final_output.append([name, host, addr, 'unable to read register'])
 
 #
 threads = []
