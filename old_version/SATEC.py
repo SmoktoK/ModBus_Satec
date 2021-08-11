@@ -46,6 +46,7 @@ for rows in range(1, sheet.max_row+1):
 all_time = time.perf_counter() - t_start
 print(f'Время генерации списка: {all_time}')
 
+
 def modbus(host, port, addr, reg, task_list):
     # open or reconnect TCP to server
     c = ModbusClient()

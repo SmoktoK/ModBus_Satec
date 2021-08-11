@@ -4,8 +4,6 @@ import threading
 import random
 import numpy as np
 from pyModbusTCP.client import ModbusClient
-import ast
-import json
 import openpyxl
 
 book_save = openpyxl.Workbook()
@@ -15,12 +13,14 @@ final_output = []
 # sheet_save = []
 t_start = time.perf_counter()
 
-excel_data_df = pd.read_excel('satec.xlsx', usecols=['server_host', 'server_port', 'start_reg', 'reg_qnty',
-                                                        'task_list'])
+excel_data_df = pd.read_excel('satec_new.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
+                                                     'task_list'])
 my_dict = excel_data_df.to_dict()
 
 
 len_dict = len(my_dict['server_host'])
+
+
 # print((temptemp)[0])
 
 # res = {int(sub.split(":")[0]): sub.split(":")[1] for sub in temptemp[1:-1].split(", ")}
@@ -35,25 +35,25 @@ len_dict = len(my_dict['server_host'])
 # t_end = time.perf_counter() - t_start
 # print(t_end)
 
-
-
-def modbus(host, port, addr, reg, task_list):
+print('Опросный лист сформирован.')
+def modbus(name, host, port, addr, reg, task_list):
     # open or reconnect TCP to server
     c = ModbusClient()
     c.host(host)
     c.port(port)
+    # c.unit_id(addr)
     # time.sleep(random.randint(3, 10))
     if not c.is_open():
         if not c.open():
-            print("unable to connect to " + host + ":" + str(port) + str(addr))
-            final_output.append([f'unable to connect {host}'])
+            # print("unable to connect to " + host + ":" + str(port) + str(addr))
+            final_output.append([name, host, 'unable to connect'])
     # if open() is ok, read register (modbus function 0x03)
     if c.is_open():
         # read 10 registers at address 0, store result in regs list
         regs = c.read_holding_registers(addr, reg)
         # if success display registers
         if regs:
-            print(regs)
+            # print(regs)
             typelist = list(task_list.values())
             keyslist = list(task_list.keys())
             keyslist = [int(x) for x in keyslist]
@@ -61,7 +61,7 @@ def modbus(host, port, addr, reg, task_list):
             # final_list = [regs[key] for key in keyslist]
             # print(str(final_list))
             q = 0
-            final_small_output = [host, addr, reg]
+            final_small_output = [name, host, addr, reg]
             for type in typelist:
                 if type == "UINT16":
                     count = np.uint16(regs[keyslist[q]])
@@ -86,10 +86,11 @@ def modbus(host, port, addr, reg, task_list):
                     q += 1
                 else:
                     print("error data TYPE")
-                    final_small_output.append([f'Error data TYPE {host}{keyslist[q]}: {keyslist[q]}'])
+                    # final_small_output.append([f'Error data TYPE {host}{keyslist[q]}: {keyslist[q]}'])
+                    final_output.append([name, host, 'Error data TYPE'])
             final_output.append(final_small_output)
         else:
-            final_output.append([f'unable to read register {host} {addr}'])
+            final_output.append([name, host, 'unable to read register'])
 
 #
 threads = []
@@ -97,17 +98,18 @@ threads = []
 for device in range(len_dict):
     temptemp = (my_dict['task_list'][device])
     dicktator = dict(e.split(':') for e in temptemp.split(', '))
+    sever_name = my_dict['name'][device]
     server_host = my_dict['server_host'][device]
     server_port = my_dict['server_port'][device]
     start_reg = my_dict['start_reg'][device]
     reg_gnty = my_dict['reg_qnty'][device]
-    t = threading.Thread(target=modbus, args=[server_host, server_port, start_reg, reg_gnty, dicktator])
+    t = threading.Thread(target=modbus, args=[sever_name, server_host, server_port, start_reg, reg_gnty, dicktator])
     t.start()
     threads.append(t)
     device += 1
+    
 for thread in threads:
     thread.join()
-
 
 for answ in final_output:
     sheet_save.append(answ)
