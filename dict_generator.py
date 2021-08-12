@@ -13,7 +13,7 @@ final_output = []
 # sheet_save = []
 t_start = time.perf_counter()
 
-excel_data_df = pd.read_excel('satec1.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
+excel_data_df = pd.read_excel('satec.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
                                                       'task_list'])
 my_dict = excel_data_df.to_dict()
 len_dict = len(my_dict['server_host'])
@@ -21,7 +21,7 @@ len_dict = len(my_dict['server_host'])
 print('Опросный лист сформирован.')
 
 
-def modbus(name, host, port, addr, reg, task_list, breake=None):
+def modbus(name, host, port, addr, reg, task_list):
     # open or reconnect TCP to server
     c = ModbusClient()
     c.host(host)
@@ -29,13 +29,13 @@ def modbus(name, host, port, addr, reg, task_list, breake=None):
     c.unit_id(addr)
     time.sleep(randint(3, 5))
     if not c.is_open():
-        print('1')
+        # print('1')
         time.sleep(randint(3, 5))
         if not c.is_open():
-            print('2')
+            # print('2')
             time.sleep(randint(3, 5))
             if not c.open():
-                print('3')
+                # print('3')
                 # print("unable to connect to " + host + ":" + str(port) + str(addr))
                 final_output.append([name, host, addr, 'unable to connect'])
     # if open() is ok, read register (modbus function 0x03)
