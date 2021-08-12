@@ -1,10 +1,10 @@
 import pandas as pd
-import time
 import threading
-import random
+import time
 import numpy as np
 from pyModbusTCP.client import ModbusClient
 import openpyxl
+from random import randint
 
 book_save = openpyxl.Workbook()
 sheet_save = book_save.active
@@ -14,83 +14,73 @@ final_output = []
 t_start = time.perf_counter()
 
 excel_data_df = pd.read_excel('satec1.xlsx', usecols=['name', 'server_host', 'server_port', 'start_reg', 'reg_qnty',
-                                                     'task_list'])
+                                                      'task_list'])
 my_dict = excel_data_df.to_dict()
-
-
 len_dict = len(my_dict['server_host'])
 
-
-# print((temptemp)[0])
-
-# res = {int(sub.split(":")[0]): sub.split(":")[1] for sub in temptemp[1:-1].split(", ")}
-# single_dict["task_list"] = res
-# print('Excel Sheet to Dict:', excel_data_df.to_dict(orient='record'))
-# f = open('xyz1.txt', 'w')
-# f.write(str(excel_data_df.to_dict()))
-# f.close()
-# print(my_dict['server_host'][896]) #  обращение по ключу в внутреннему словарю
-
-# print(len_dict)
-# t_end = time.perf_counter() - t_start
-# print(t_end)
-
 print('Опросный лист сформирован.')
-def modbus(name, host, port, addr, reg, task_list):
+
+
+def modbus(name, host, port, addr, reg, task_list, breake=None):
     # open or reconnect TCP to server
     c = ModbusClient()
     c.host(host)
     c.port(port)
-    # c.unit_id(addr)
-    # time.sleep(random.randint(3, 10))
+    c.unit_id(addr)
+    time.sleep(randint(3, 5))
     if not c.is_open():
-        if not c.open():
-            # print("unable to connect to " + host + ":" + str(port) + str(addr))
-            final_output.append([name, host, addr, 'unable to connect'])
+        print('1')
+        time.sleep(randint(3, 5))
+        if not c.is_open():
+            print('2')
+            time.sleep(randint(3, 5))
+            if not c.open():
+                print('3')
+                # print("unable to connect to " + host + ":" + str(port) + str(addr))
+                final_output.append([name, host, addr, 'unable to connect'])
     # if open() is ok, read register (modbus function 0x03)
     if c.is_open():
-        # read 10 registers at address 0, store result in regs list
-        regs = c.read_holding_registers(addr, reg)
-        # if success display registers
-        if regs:
-            # print(regs)
-            typelist = list(task_list.values())
-            keyslist = list(task_list.keys())
-            keyslist = [int(x) for x in keyslist]
-            # print("reg ad #0 to 9: " + str(regs))
-            # final_list = [regs[key] for key in keyslist]
-            # print(str(final_list))
-            q = 0
-            final_small_output = [name, host, addr]
-            for type in typelist:
-                if type == "UINT16":
-                    count = np.uint16(regs[keyslist[q]])
-                    # print(count, q)
-                    key_final = regs[keyslist[q]]
-                    final_small_output.append(f'{keyslist[q]}: {count}')
-                    q += 1
-                elif type == "INT16":
-                    count = np.int16(regs[keyslist[q]])
-                    # print(count, q)
-                    final_small_output.append(f'{keyslist[q]}: {count}')
-                    q += 1
-                elif type == "UINT32":
-                    count = (np.uint16(regs[keyslist[q] + 1]) << 16) + np.uint16(regs[keyslist[q]])
-                    # print(count, q)
-                    final_small_output.append(f'{keyslist[q]}: {count}')
-                    q += 1
-                elif type == "INT32":
-                    count = (np.int16(regs[keyslist[q] + 1]) << 16) + np.uint16(regs[keyslist[q]])
-                    # print(count, q)
-                    final_small_output.append(f'{keyslist[q]}: {count}')
-                    q += 1
-                else:
-                    print("error data TYPE")
-                    # final_small_output.append([f'Error data TYPE {host}{keyslist[q]}: {keyslist[q]}'])
-                    final_output.append([name, host, addr, 'Error data TYPE'])
-            final_output.append(final_small_output)
-        else:
+        i = 0
+        while i < 3:
+            regs = c.read_holding_registers(addr, reg)
+            if regs:
+                q = 0
+                typelist = list(task_list.values())
+                keyslist = list(task_list.keys())
+                keyslist = [int(x) for x in keyslist]
+                final_small_output = [name, host, addr]
+                for type in typelist:
+                    if type == "UINT16":
+                        count = np.uint16(regs[keyslist[q]])
+                        # print(count, q)
+                        key_final = regs[keyslist[q]]
+                        final_small_output.append(f'{keyslist[q]}: {count}')
+                        q += 1
+                    elif type == "INT16":
+                        count = np.int16(regs[keyslist[q]])
+                        # print(count, q)
+                        final_small_output.append(f'{keyslist[q]}: {count}')
+                        q += 1
+                    elif type == "UINT32":
+                        count = (np.uint16(regs[keyslist[q] + 1]) << 16) + np.uint16(regs[keyslist[q]])
+                        # print(count, q)
+                        final_small_output.append(f'{keyslist[q]}: {count}')
+                        q += 1
+                    elif type == "INT32":
+                        count = (np.int16(regs[keyslist[q] + 1]) << 16) + np.uint16(regs[keyslist[q]])
+                        # print(count, q)
+                        final_small_output.append(f'{keyslist[q]}: {count}')
+                        q += 1
+                    else:
+                        print("error data TYPE")
+                        # final_small_output.append([f'Error data TYPE {host}{keyslist[q]}: {keyslist[q]}'])
+                        final_output.append([name, host, addr, 'Error data TYPE'])
+                final_output.append(final_small_output)
+                break
+            else:
+                i += 1
             final_output.append([name, host, addr, 'unable to read register'])
+
 
 #
 threads = []
@@ -107,7 +97,7 @@ for device in range(len_dict):
     t.start()
     threads.append(t)
     device += 1
-    
+
 for thread in threads:
     thread.join()
 
